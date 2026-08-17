@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pilihan Game PIAUD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#bfe8ee; --sky-bottom:#eaf7d9;
+    --ink:#3b3126; --card:#fffaf0;
+    --merah:#e6484f; --merah-d:#c22f36;
+    --kuning:#ffd93d; --kuning-d:#e0b400;
+    --hijau:#6fbf73; --hijau-d:#4a9950;
+    --biru:#57b8d6; --biru-d:#3a92ad;
+    --ungu:#b28ae0; --ungu-d:#8f63c2;
+    --oranye:#f4a340; --oranye-d:#d98521;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%; margin:0;}
+  body{
+    font-family:'Nunito', sans-serif; color:var(--ink);
+    background:linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-bottom) 100%);
+    display:flex; align-items:center; justify-content:center;
+    user-select:none; -webkit-user-select:none;
+  }
+  .display{ font-family:'Baloo 2', sans-serif; }
+  #stage{
+    position:relative; width:100%; max-width:520px; height:100vh; height:100dvh; max-height:920px;
+    overflow:hidden; box-shadow:0 0 60px rgba(0,0,0,0.12);
+    background:linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-bottom) 100%);
+  }
+  .screen{
+    position:absolute; inset:0; display:none; flex-direction:column;
+    padding:18px; overflow-y:auto;
+  }
+  .screen.active{ display:flex; }
+
+  .btn{
+    font-family:'Baloo 2'; font-weight:700; font-size:1.1rem; color:#fff;
+    background:linear-gradient(180deg,#ff9a5c,#f2703b); border:none; border-radius:999px;
+    padding:12px 30px; box-shadow:0 5px 0 #c14f22; cursor:pointer;
+  }
+  .btn:active{ transform:translateY(4px); box-shadow:0 0 0 #c14f22; }
+  .btn.small{ font-size:0.95rem; padding:9px 20px; }
+  .btn-back{
+    position:sticky; top:0; align-self:flex-start;
+    background:var(--card); color:var(--ink); font-family:'Baloo 2'; font-weight:700;
+    border:none; border-radius:999px; padding:8px 18px; box-shadow:0 4px 0 rgba(0,0,0,0.1);
+    margin-bottom:10px; z-index:10; cursor:pointer;
+  }
+
+  /* ---- MENU ---- */
+  #menu-title{ text-align:center; margin:6px 0 2px; font-size:1.6rem; color:var(--merah-d); }
+  #menu-sub{ text-align:center; margin:0 0 16px; font-size:0.95rem; }
+  .game-card{
+    background:var(--card); border-radius:20px; padding:16px; margin-bottom:14px;
+    box-shadow:0 6px 0 rgba(0,0,0,0.08); display:flex; gap:14px; align-items:center;
+  }
+  .game-card .icon{ font-size:2.4rem; flex-shrink:0; }
+  .game-card .info{ flex:1; }
+  .game-card .tag{
+    display:inline-block; font-size:0.68rem; font-weight:800; letter-spacing:0.03em;
+    padding:3px 10px; border-radius:999px; color:#fff; margin-bottom:4px;
+  }
+  .game-card h3{ margin:2px 0 4px; font-size:1.05rem; font-family:'Baloo 2'; }
+  .game-card p{ margin:0 0 10px; font-size:0.85rem; line-height:1.35; }
+
+  /* ---- Shared game header ---- */
+  .g-instruction{
+    text-align:center; font-weight:800; font-family:'Baloo 2'; font-size:1.15rem;
+    margin:2px 0 14px;
+  }
+  .g-center{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; }
+  .feedback{
+    position:fixed; top:14px; left:50%; transform:translateX(-50%);
+    font-family:'Baloo 2'; font-weight:800; font-size:1.1rem; color:#fff;
+    padding:10px 22px; border-radius:999px; opacity:0; transition:opacity .25s; z-index:100;
+  }
+  .feedback.show{ opacity:1; }
+  .feedback.ok{ background:var(--hijau-d); }
+  .feedback.no{ background:var(--merah-d); }
+
+  /* ===== Game 1: Hitung ===== */
+  .emoji-big{ font-size:5rem; text-align:center; }
+  .tray{ font-size:2.6rem; letter-spacing:6px; text-align:center; max-width:320px; }
+  .opt-row{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+  .opt-btn{
+    font-family:'Baloo 2'; font-weight:800; font-size:1.6rem; color:#fff;
+    width:74px; height:74px; border-radius:20px; border:none; cursor:pointer;
+    background:linear-gradient(180deg,#7bd0e0,var(--biru)); box-shadow:0 5px 0 var(--biru-d);
+  }
+  .opt-btn:active{ transform:translateY(4px); box-shadow:0 0 0 var(--biru-d); }
+  .opt-btn.letter{ background:linear-gradient(180deg,#c9a6ef,var(--ungu)); box-shadow:0 5px 0 var(--ungu-d); }
+  .opt-btn.wrongshake{ animation:shake .35s; }
+  @keyframes shake{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);} }
+
+  /* ===== Game 3: Balon ===== */
+  #balon-area{ position:relative; flex:1; width:100%; overflow:hidden; border-radius:16px;
+    background:linear-gradient(to bottom, #d7f0f5, #eefaf0); }
+  .balon{
+    position:absolute; bottom:-70px; width:56px; height:68px; border-radius:50% 50% 50% 50% / 55% 55% 45% 45%;
+    cursor:pointer; box-shadow:inset -8px -10px 0 rgba(0,0,0,0.08);
+    animation-name:balonNaik; animation-timing-function:linear; animation-fill-mode:forwards;
+    will-change:transform;
+  }
+  @keyframes balonNaik{ from{ transform:translateY(0);} to{ transform:translateY(-115vh);} }
+  .balon::after{ content:''; position:absolute; bottom:-8px; left:50%; width:2px; height:10px; background:#8886; transform:translateX(-50%); }
+  #balon-hud{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-family:'Baloo 2'; font-weight:800; }
+  #balon-target{ display:flex; align-items:center; gap:8px; }
+  #target-swatch{ width:28px; height:28px; border-radius:50%; border:3px solid #fff; box-shadow:0 2px 4px rgba(0,0,0,0.2); }
+
+  /* ===== Game 4: Ekspresi ===== */
+  .story-card{ background:var(--card); border-radius:20px; padding:20px; text-align:center; font-size:1.05rem; font-weight:700; max-width:340px; box-shadow:0 6px 0 rgba(0,0,0,0.08); }
+  .face-btn{ font-size:2.6rem; background:var(--card); border:none; border-radius:18px; padding:10px 16px; cursor:pointer; box-shadow:0 5px 0 rgba(0,0,0,0.1); }
+  .face-btn:active{ transform:translateY(4px); box-shadow:0 0 0 rgba(0,0,0,0.1); }
+
+  /* ===== Game 5: Urutan ===== */
+  #urutan-list{ display:flex; flex-direction:column; gap:10px; width:100%; max-width:360px; }
+  .step-card{
+    background:var(--card); border-radius:16px; padding:14px 16px; font-weight:700;
+    display:flex; align-items:center; gap:12px; cursor:pointer; box-shadow:0 5px 0 rgba(0,0,0,0.08);
+  }
+  .step-card .num{
+    width:32px; height:32px; border-radius:50%; background:#e8e2d2; display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2'; font-weight:800; flex-shrink:0;
+  }
+  .step-card.done{ background:#dff3df; }
+  .step-card.done .num{ background:var(--hijau); color:#fff; }
+  .step-card.shake{ animation:shake .35s; }
+
+  /* ===== Game 6: Mewarnai ===== */
+  #palette{ display:flex; gap:10px; justify-content:center; margin-top:12px; flex-wrap:wrap; }
+  .swatch{ width:38px; height:38px; border-radius:50%; border:3px solid #fff; box-shadow:0 3px 6px rgba(0,0,0,0.15); cursor:pointer; }
+  .swatch.selected{ outline:3px solid var(--ink); outline-offset:2px; }
+
+  #confetti-layer{ position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:200; }
+  .confetti{ position:absolute; width:9px; height:9px; top:-20px; border-radius:2px; animation:fall linear forwards; }
+  @keyframes fall{ to{ transform:translateY(110vh) rotate(360deg); opacity:0.9; } }
+
+  .done-card{ background:var(--card); border-radius:22px; padding:26px; text-align:center; box-shadow:0 8px 0 rgba(0,0,0,0.08); }
+  .done-card h2{ font-family:'Baloo 2'; color:var(--merah-d); margin:6px 0; }
+
+  /* ===== resp-btn dipakai Roleplay & Kisah Nabi ===== */
+  .resp-btn{
+    font-family:'Nunito'; font-weight:800; font-size:0.95rem; text-align:left;
+    background:var(--card); border:none; border-radius:16px; padding:14px 18px;
+    box-shadow:0 5px 0 rgba(0,0,0,0.08); cursor:pointer; line-height:1.3;
+  }
+  .resp-btn:active{ transform:translateY(4px); box-shadow:0 0 0 rgba(0,0,0,0.08); }
+
+  /* ===== bangun-chip: potongan yang bisa diseret di game Susun Bangunan ===== */
+  .bangun-chip{
+    background:var(--card); border-radius:16px; padding:10px 16px;
+    box-shadow:0 5px 0 rgba(0,0,0,0.08); cursor:grab; touch-action:none;
+    line-height:1; display:inline-flex; align-items:center; justify-content:center;
+  }
+  .bangun-chip:active{ cursor:grabbing; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="confetti-layer"></div>
+  <div class="feedback" id="feedback"></div>
+
+  <!-- ================= MENU ================= -->
+  <div class="screen active" id="screen-menu">
+    <h1 id="menu-title" class="display">Pilihan Game PIAUD</h1>
+    <p id="menu-sub">Coba tiap game, lalu pilih mana yang paling cocok 🙂</p>
+
+    <div class="game-card">
+      <div class="icon">🍎</div>
+      <div class="info">
+        <span class="tag" style="background:var(--biru-d)">KOGNITIF</span>
+        <h3>Hitung Buah</h3>
+        <p>Anak menghitung jumlah buah lalu memilih angka yang benar.</p>
+        <button class="btn small" onclick="startGame('hitung')">Coba</button>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <div class="icon">🐘</div>
+      <div class="info">
+        <span class="tag" style="background:var(--ungu-d)">BAHASA</span>
+        <h3>Tebak Huruf Awal</h3>
+        <p>Anak melihat gambar dan menebak huruf awal namanya.</p>
+        <button class="btn small" onclick="startGame('huruf')">Coba</button>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <div class="icon">🎈</div>
+      <div class="info">
+        <span class="tag" style="background:var(--oranye-d)">FISIK-MOTORIK</span>
+        <h3>Pop Balon Warna</h3>
+        <p>Anak menyentuh balon sesuai warna target secepat mungkin.</p>
+        <button class="btn small" onclick="startGame('balon')">Coba</button>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <div class="icon">😊</div>
+      <div class="info">
+        <span class="tag" style="background:var(--merah-d)">SOSIAL-EMOSIONAL</span>
+        <h3>Tebak Ekspresi</h3>
+        <p>Anak mendengar cerita singkat lalu memilih ekspresi yang sesuai.</p>
+        <button class="btn small" onclick="startGame('ekspresi')">Coba</button>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <div class="icon">🕌</div>
+      <div class="info">
+        <span class="tag" style="background:var(--hijau-d)">NILAI AGAMA & MORAL</span>
+        <h3>Urutan Wudhu</h3>
+        <p>Anak menyusun langkah wudhu sesuai urutan yang benar.</p>
+        <button class="btn small" onclick="startGame('urutan')">Coba</button>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <div class="icon">🎨</div>
+      <div class="info">
+        <span class="tag" style="background:#c2635f">SENI</span>
+        <h3>Mewarnai Bunga</h3>
+        <p>Anak memilih warna lalu mewarnai bagian-bagian bunga.</p>
+        <button class="btn small" onclick="startGame('warna')">Coba</button>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <div class="icon">🌟</div>
+      <div class="info">
+        <span class="tag" style="background:var(--biru-d)">KOGNITIF</span>
+        <h3>Sortir Ukuran</h3>
+        <p>Anak mengurutkan benda dari yang paling kecil ke paling besar.</p>
+        <button class="btn small" onclick="startGame('sortir')">Coba</button>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <div class="icon">🤸</div>
+      <div class="info">
+        <span class="tag" style="background:var(--oranye-d)">FISIK-MOTORIK</span>
+        <h3>Ikuti Gerakan</h3>
+        <p>Anak menirukan gerakan yang ditunjukkan di layar (dampingi anak bergerak langsung ya).</p>
+        <button class="btn small" onclick="startGame('gerak')">Coba</button>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <div class="icon">🤝</div>
+      <div class="info">
+        <span class="tag" style="background:var(--merah-d)">SOSIAL-EMOSIONAL</span>
+        <h3>Sikap yang Baik</h3>
+        <p>Anak memilih respon yang tepat untuk situasi sosial sehari-hari.</p>
+        <button class="btn small" onclick="startGame('roleplay')">Coba</button>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <div class="icon">📖</div>
+      <div class="info">
+        <span class="tag" style="background:var(--hijau-d)">NILAI AGAMA & MORAL</span>
+        <h3>Kisah Teladan Nabi</h3>
+        <p>Anak membaca cerita singkat lalu menjawab pertanyaan sederhana.</p>
+        <button class="btn small" onclick="startGame('nabi')">Coba</button>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <div class="icon">🏠</div>
+      <div class="info">
+        <span class="tag" style="background:#c2635f">SENI</span>
+        <h3>Susun Bangunan</h3>
+        <p>Anak menyusun bagian-bagian bentuk sesuai contoh yang ditunjukkan.</p>
+        <button class="btn small" onclick="startGame('bangun')">Coba</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GAME 1: HITUNG ================= -->
+  <div class="screen" id="screen-hitung">
+    <button class="btn-back" onclick="goMenu()">← Menu</button>
+    <div class="g-instruction">Ada berapa buah semuanya?</div>
+    <div class="g-center">
+      <div class="tray" id="hitung-tray"></div>
+      <div class="opt-row" id="hitung-opts"></div>
+    </div>
+  </div>
+
+  <!-- ================= GAME 2: HURUF ================= -->
+  <div class="screen" id="screen-huruf">
+    <button class="btn-back" onclick="goMenu()">← Menu</button>
+    <div class="g-instruction">Ini gambar apa? Huruf awalnya apa ya?</div>
+    <div class="g-center">
+      <div class="emoji-big" id="huruf-emoji"></div>
+      <div class="opt-row" id="huruf-opts"></div>
+    </div>
+  </div>
+
+  <!-- ================= GAME 3: BALON ================= -->
+  <div class="screen" id="screen-balon">
+    <button class="btn-back" onclick="goMenu()">← Menu</button>
+    <div id="balon-hud">
+      <div id="balon-target">Sentuh balon: <div id="target-swatch"></div></div>
+      <div>Soal <span id="balon-soal">1</span>/5</div>
+    </div>
+    <div id="balon-area"></div>
+  </div>
+
+  <!-- ================= GAME 4: EKSPRESI ================= -->
+  <div class="screen" id="screen-ekspresi">
+    <button class="btn-back" onclick="goMenu()">← Menu</button>
+    <div class="g-instruction">Bagaimana perasaannya?</div>
+    <div class="g-center">
+      <div class="story-card" id="ekspresi-story"></div>
+      <div class="opt-row" id="ekspresi-opts"></div>
+    </div>
+  </div>
+
+  <!-- ================= GAME 5: URUTAN ================= -->
+  <div class="screen" id="screen-urutan">
+    <button class="btn-back" onclick="goMenu()">← Menu</button>
+    <div class="g-instruction">Tap langkah wudhu sesuai urutannya ya!</div>
+    <div class="g-center">
+      <div id="urutan-list"></div>
+    </div>
+  </div>
+
+  <!-- ================= GAME 6: WARNA ================= -->
+  <div class="screen" id="screen-warna">
+    <button class="btn-back" onclick="goMenu()">← Menu</button>
+    <div class="g-instruction">Pilih warna, lalu tap bagian bunganya!</div>
+    <div class="g-center">
+      <svg viewBox="0 0 200 200" width="230" height="230">
+        <ellipse id="petal-top" cx="100" cy="55" rx="26" ry="38" fill="#e9e4d8" onclick="colorRegion(this)"/>
+        <ellipse id="petal-right" cx="145" cy="100" rx="38" ry="26" fill="#e9e4d8" onclick="colorRegion(this)"/>
+        <ellipse id="petal-bottom" cx="100" cy="145" rx="26" ry="38" fill="#e9e4d8" onclick="colorRegion(this)"/>
+        <ellipse id="petal-left" cx="55" cy="100" rx="38" ry="26" fill="#e9e4d8" onclick="colorRegion(this)"/>
+        <circle id="petal-center" cx="100" cy="100" r="22" fill="#e9e4d8" onclick="colorRegion(this)"/>
+        <rect x="95" y="160" width="10" height="30" fill="#8bc98a"/>
+      </svg>
+      <div id="palette">
+        <div class="swatch" style="background:var(--merah)" onclick="pickColor('var(--merah)',this)"></div>
+        <div class="swatch" style="background:var(--kuning)" onclick="pickColor('var(--kuning)',this)"></div>
+        <div class="swatch" style="background:var(--biru)" onclick="pickColor('var(--biru)',this)"></div>
+        <div class="swatch" style="background:var(--hijau)" onclick="pickColor('var(--hijau)',this)"></div>
+        <div class="swatch" style="background:var(--ungu)" onclick="pickColor('var(--ungu)',this)"></div>
+        <div class="swatch" style="background:var(--oranye)" onclick="pickColor('var(--oranye)',this)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GAME 7: SORTIR UKURAN ================= -->
+  <div class="screen" id="screen-sortir">
+    <button class="btn-back" onclick="goMenu()">← Menu</button>
+    <div class="g-instruction" id="sortir-label">Urutkan dari yang paling kecil ke paling besar</div>
+    <div class="g-center">
+      <div class="opt-row" id="sortir-opts" style="align-items:flex-end;"></div>
+    </div>
+  </div>
+
+  <!-- ================= GAME 8: IKUTI GERAKAN ================= -->
+  <div class="screen" id="screen-gerak">
+    <button class="btn-back" onclick="goMenu()">← Menu</button>
+    <div class="g-instruction">Yuk ikuti gerakannya bersama-sama!</div>
+    <div class="g-center">
+      <div class="emoji-big" id="gerak-emoji"></div>
+      <div class="story-card" id="gerak-text" style="font-size:1.2rem;"></div>
+      <div id="gerak-count" style="font-family:'Baloo 2'; font-weight:800; font-size:2.4rem; color:var(--oranye-d);"></div>
+    </div>
+  </div>
+
+  <!-- ================= GAME 9: ROLEPLAY SOSIAL ================= -->
+  <div class="screen" id="screen-roleplay">
+    <button class="btn-back" onclick="goMenu()">← Menu</button>
+    <div class="g-instruction">Pilih sikap yang paling tepat!</div>
+    <div class="g-center">
+      <div class="story-card" id="roleplay-story"></div>
+      <div id="roleplay-opts" style="display:flex; flex-direction:column; gap:10px; width:100%; max-width:340px;"></div>
+    </div>
+  </div>
+
+  <!-- ================= GAME 10: KISAH NABI ================= -->
+  <div class="screen" id="screen-nabi">
+    <button class="btn-back" onclick="goMenu()">← Menu</button>
+    <div class="g-instruction">Dengarkan ceritanya, lalu jawab ya!</div>
+    <div class="g-center">
+      <div class="story-card" id="nabi-story"></div>
+      <div style="font-family:'Baloo 2'; font-weight:700;" id="nabi-question"></div>
+      <div id="nabi-opts" style="display:flex; flex-direction:column; gap:10px; width:100%; max-width:340px;"></div>
+    </div>
+  </div>
+
+  <!-- ================= GAME 11: SUSUN BANGUNAN ================= -->
+  <div class="screen" id="screen-bangun">
+    <button class="btn-back" onclick="goMenu()">← Menu</button>
+    <div class="g-instruction" id="bangun-name">Seret bagian yang hilang ke tempatnya!</div>
+    <div class="g-center">
+      <div id="bangun-scene" style="position:relative; width:230px; height:230px; overflow:hidden; border-radius:18px; box-shadow:0 6px 0 rgba(0,0,0,0.08); background:linear-gradient(to bottom, #eaf7fb 0%, #eaf7fb 82%, #b7e2a1 82%, #b7e2a1 100%);"></div>
+      <div id="bangun-hint" style="display:flex; align-items:center; gap:8px; font-family:'Baloo 2'; font-weight:700; font-size:0.95rem; text-align:center;">
+        Cari bentuk <span id="bangun-hint-shape" style="color:var(--merah-d);"></span> warna ini: <span id="bangun-hint-swatch" style="width:26px; height:26px; border-radius:50%; border:3px solid #fff; box-shadow:0 2px 4px rgba(0,0,0,0.2); display:inline-block;"></span>
+      </div>
+      <div id="bangun-tray" style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;"></div>
+    </div>
+  </div>
+
+  <!-- ================= SELESAI (dipakai semua game) ================= -->
+  <div class="screen" id="screen-selesai">
+    <div class="g-center">
+      <div class="done-card">
+        <div style="font-size:3rem">🎉</div>
+        <h2 class="display">Hebat sekali!</h2>
+        <p id="selesai-text">Kamu berhasil menyelesaikan permainan ini.</p>
+        <button class="btn" onclick="goMenu()">Kembali ke Menu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= NAVIGASI ================= */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+}
+function goMenu(){ showScreen('menu'); clearInterval(gerakTimer); }
+
+function startGame(name){
+  showScreen(name);
+  if(name==='hitung') initHitung();
+  if(name==='huruf') initHuruf();
+  if(name==='balon') initBalon();
+  if(name==='ekspresi') initEkspresi();
+  if(name==='urutan') initUrutan();
+  if(name==='warna') initWarna();
+  if(name==='sortir') initSortir();
+  if(name==='gerak') initGerak();
+  if(name==='roleplay') initRoleplay();
+  if(name==='nabi') initNabi();
+  if(name==='bangun') initBangun();
+}
+
+function flashFeedback(ok, text){
+  const el = document.getElementById('feedback');
+  el.textContent = text || (ok ? 'Benar! 👍' : 'Coba lagi ya');
+  el.className = 'feedback show ' + (ok?'ok':'no');
+  setTimeout(()=>el.classList.remove('show'), 900);
+}
+
+function chime(good){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const freqs = good ? [523.25,659.25,783.99] : [300,220];
+    freqs.forEach((f,i)=>{
+      const o = ctx.createOscillator(); const g = ctx.createGain();
+      o.type='sine'; o.frequency.value=f; g.gain.value=0.06;
+      o.connect(g); g.connect(ctx.destination);
+      const t0 = ctx.currentTime + i*0.11;
+      o.start(t0); g.gain.exponentialRampToValueAtTime(0.0001, t0+0.35); o.stop(t0+0.4);
+    });
+  }catch(e){}
+}
+
+function speak(text){
+  try{
+    if(!('speechSynthesis' in window)) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang='id-ID'; u.rate=0.95; u.pitch=1.1;
+    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+function finishGame(text){
+  document.getElementById('selesai-text').textContent = text;
+  showScreen('selesai');
+  launchConfetti();
+  speak('Hebat sekali, kamu berhasil menyelesaikan permainan');
+}
+
+function launchConfetti(){
+  const layer = document.getElementById('confetti-layer');
+  const colors = ['#e6484f','#ffd93d','#f4a340','#6fbf73','#57b8d6','#b28ae0'];
+  for(let i=0;i<26;i++){
+    const c = document.createElement('div');
+    c.className='confetti';
+    c.style.left = Math.random()*100+'%';
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = (2+Math.random()*1.5)+'s';
+    c.style.animationDelay = (Math.random()*0.6)+'s';
+    layer.appendChild(c);
+    setTimeout(()=>c.remove(), 4000);
+  }
+}
+
+function shuffle(arr){
+  const a = [...arr];
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ================= GAME 1: HITUNG BUAH (Kognitif) ================= */
+const HITUNG_EMOJI = ['🍎','🍊','🍌','🍇','🍓','🍑','🍍','🥝','🍒','🍐'];
+let hitungRound = 0;
+const HITUNG_TOTAL_ROUND = 5;
+
+function initHitung(){
+  hitungRound = 0;
+  nextHitungRound();
+}
+function nextHitungRound(){
+  if(hitungRound >= HITUNG_TOTAL_ROUND){ finishGame('Kamu berhasil berhitung dengan benar!'); return; }
+  const emoji = HITUNG_EMOJI[Math.floor(Math.random()*HITUNG_EMOJI.length)];
+  const count = 3 + Math.floor(Math.random()*6); // 3..8
+  document.getElementById('hitung-tray').textContent = (emoji+' ').repeat(count).trim();
+
+  let opts = new Set([count]);
+  while(opts.size<3){
+    const v = count + (Math.floor(Math.random()*5)-2);
+    if(v>=1 && v<=10) opts.add(v);
+  }
+  const optsArr = shuffle([...opts]);
+  const wrap = document.getElementById('hitung-opts');
+  wrap.innerHTML='';
+  optsArr.forEach(v=>{
+    const b = document.createElement('button');
+    b.className='opt-btn'; b.textContent=v;
+    b.onclick=()=>{
+      if(v===count){
+        chime(true); flashFeedback(true); speak(String(count));
+        hitungRound++;
+        setTimeout(nextHitungRound, 700);
+      } else {
+        chime(false); flashFeedback(false); b.classList.add('wrongshake');
+        setTimeout(()=>b.classList.remove('wrongshake'), 350);
+      }
+    };
+    wrap.appendChild(b);
+  });
+}
+
+/* ================= GAME 2: TEBAK HURUF AWAL (Bahasa) ================= */
+const HURUF_DATA = [
+  {emoji:'🐘', letter:'G'}, {emoji:'🐟', letter:'I'}, {emoji:'🌙', letter:'B'},
+  {emoji:'🍉', letter:'S'}, {emoji:'🐱', letter:'K'}, {emoji:'☂️', letter:'P'},
+  {emoji:'🐝', letter:'L'}, {emoji:'🐄', letter:'S'}, {emoji:'🐐', letter:'K'},
+  {emoji:'🦆', letter:'B'}, {emoji:'🐢', letter:'K'}, {emoji:'🐔', letter:'A'},
+  {emoji:'🌸', letter:'B'}, {emoji:'🍇', letter:'A'}, {emoji:'🚗', letter:'M'},
+  {emoji:'⚽', letter:'B'}, {emoji:'🌳', letter:'P'}, {emoji:'🎈', letter:'B'},
+  {emoji:'🐍', letter:'U'}, {emoji:'🦋', letter:'K'},
+];
+let hurufRound = 0;
+const HURUF_TOTAL_ROUND = 5;
+let hurufOrder = [];
+
+function initHuruf(){
+  hurufRound = 0;
+  hurufOrder = shuffle(HURUF_DATA).slice(0, HURUF_TOTAL_ROUND);
+  nextHurufRound();
+}
+function nextHurufRound(){
+  if(hurufRound >= hurufOrder.length){ finishGame('Kamu hebat mengenal huruf awal!'); return; }
+  const item = hurufOrder[hurufRound];
+  document.getElementById('huruf-emoji').textContent = item.emoji;
+
+  let letters = new Set([item.letter]);
+  const alphabetPool = 'ABCDEFGHIJKLMNOPRSTU'.split('');
+  while(letters.size<3){
+    letters.add(alphabetPool[Math.floor(Math.random()*alphabetPool.length)]);
+  }
+  const arr = shuffle([...letters]);
+  const wrap = document.getElementById('huruf-opts');
+  wrap.innerHTML='';
+  arr.forEach(l=>{
+    const b = document.createElement('button');
+    b.className='opt-btn letter'; b.textContent=l;
+    b.onclick=()=>{
+      if(l===item.letter){
+        chime(true); flashFeedback(true); speak('Huruf '+l);
+        hurufRound++;
+        setTimeout(nextHurufRound, 700);
+      } else {
+        chime(false); flashFeedback(false); b.classList.add('wrongshake');
+        setTimeout(()=>b.classList.remove('wrongshake'), 350);
+      }
+    };
+    wrap.appendChild(b);
+  });
+}
+
+/* ================= GAME 3: POP BALON WARNA (Fisik-Motorik) ================= */
+const BALON_COLORS = [
+  {name:'merah', hex:'#e6484f'}, {name:'kuning', hex:'#ffd93d'},
+  {name:'biru', hex:'#57b8d6'}, {name:'hijau', hex:'#6fbf73'},
+  {name:'ungu', hex:'#b28ae0'}, {name:'oranye', hex:'#f4a340'},
+];
+let balonTarget = null, balonSpawner = null, balonRound = 0;
+const BALON_TOTAL_ROUND = 5;
+
+function initBalon(){
+  balonRound = 0;
+  document.getElementById('balon-area').innerHTML = '';
+  startBalonRound();
+}
+function startBalonRound(){
+  document.getElementById('balon-soal').textContent = balonRound + 1;
+  document.getElementById('balon-area').innerHTML = '';
+  pickBalonTarget();
+  clearInterval(balonSpawner);
+  spawnSatuBalon(document.getElementById('balon-area')); // langsung muncul, tidak menunggu interval pertama
+  balonSpawner = setInterval(()=>{
+    const area = document.getElementById('balon-area');
+    if(!area || area.children.length > 6) return; // lebih sedikit biar anak fokus
+    spawnSatuBalon(area);
+  }, 900);
+}
+function pickBalonTarget(){
+  balonTarget = BALON_COLORS[Math.floor(Math.random()*BALON_COLORS.length)];
+  document.getElementById('target-swatch').style.background = balonTarget.hex;
+}
+function spawnSatuBalon(area){
+  const c = BALON_COLORS[Math.floor(Math.random()*BALON_COLORS.length)];
+  const el = document.createElement('div');
+  el.className='balon';
+  el.style.background = `radial-gradient(circle at 35% 30%, #fff, ${c.hex})`;
+  el.style.left = (10 + Math.random()*75) + '%';
+  const duration = 7 + Math.random()*3; // pelan, kasih waktu anak mengenali warna dulu
+  el.style.animationDuration = duration + 's';
+  area.appendChild(el);
+  el.addEventListener('animationend', ()=>{ if(el.parentNode) el.remove(); });
+
+  el.addEventListener('click', ()=>{
+    if(c.name === balonTarget.name){
+      chime(true); flashFeedback(true);
+      clearInterval(balonSpawner);
+      document.getElementById('balon-area').innerHTML = '';
+      balonRound++;
+      if(balonRound >= BALON_TOTAL_ROUND){
+        setTimeout(()=>finishGame('Kamu jago menyentuh balon warna yang tepat!'), 500);
+      } else {
+        setTimeout(startBalonRound, 700);
+      }
+    } else {
+      chime(false); flashFeedback(false);
+      el.remove();
+    }
+  });
+}
+
+/* ================= GAME 4: TEBAK EKSPRESI (Sosial-Emosional) ================= */
+const EKSPRESI_FACES = { senang:'😊', sedih:'😢', marah:'😠', takut:'😨' };
+const EKSPRESI_DATA = [
+  {text:'Rani mendapat hadiah ulang tahun dari ibunya.', correct:'senang'},
+  {text:'Budi kehilangan mainan kesayangannya.', correct:'sedih'},
+  {text:'Kakak marah karena adiknya merusak buku gambarnya.', correct:'marah'},
+  {text:'Sinta takut melihat anjing besar di jalan.', correct:'takut'},
+  {text:'Dito bermain ayunan bersama teman-temannya di taman.', correct:'senang'},
+  {text:'Ani menangis karena es krimnya jatuh ke tanah.', correct:'sedih'},
+  {text:'Reza kesal karena antrean mainannya diserobot temannya.', correct:'marah'},
+  {text:'Lala bersembunyi karena mendengar suara petir yang keras.', correct:'takut'},
+  {text:'Fira tertawa senang saat diajak jalan-jalan ke kebun binatang.', correct:'senang'},
+  {text:'Bayu sedih karena sahabatnya pindah sekolah.', correct:'sedih'},
+  {text:'Ibu marah karena mainan adik berserakan di lantai.', correct:'marah'},
+  {text:'Doni takut naik ke tempat yang tinggi.', correct:'takut'},
+  {text:'Nadia senang karena berhasil menyelesaikan puzzle sendiri.', correct:'senang'},
+  {text:'Yusuf sedih karena bekalnya tertinggal di rumah.', correct:'sedih'},
+];
+let ekspresiRound = 0;
+let ekspresiOrder = [];
+
+function initEkspresi(){
+  ekspresiRound = 0;
+  ekspresiOrder = shuffle(EKSPRESI_DATA).slice(0, 5);
+  nextEkspresiRound();
+}
+function nextEkspresiRound(){
+  if(ekspresiRound >= ekspresiOrder.length){ finishGame('Kamu pintar mengenali perasaan orang lain!'); return; }
+  const item = ekspresiOrder[ekspresiRound];
+  document.getElementById('ekspresi-story').textContent = item.text;
+
+  let keys = new Set([item.correct]);
+  const allKeys = Object.keys(EKSPRESI_FACES);
+  while(keys.size<3){ keys.add(allKeys[Math.floor(Math.random()*allKeys.length)]); }
+  const arr = shuffle([...keys]);
+  const wrap = document.getElementById('ekspresi-opts');
+  wrap.innerHTML='';
+  arr.forEach(k=>{
+    const b = document.createElement('button');
+    b.className='face-btn'; b.textContent = EKSPRESI_FACES[k];
+    b.onclick=()=>{
+      if(k===item.correct){
+        chime(true); flashFeedback(true);
+        ekspresiRound++;
+        setTimeout(nextEkspresiRound, 700);
+      } else {
+        chime(false); flashFeedback(false); b.classList.add('wrongshake');
+        setTimeout(()=>b.classList.remove('wrongshake'), 350);
+      }
+    };
+    wrap.appendChild(b);
+  });
+}
+
+/* ================= GAME 5: URUTAN WUDHU (Nilai Agama & Moral) ================= */
+const URUTAN_STEPS = [
+  'Membaca niat wudhu',
+  'Berkumur-kumur',
+  'Membasuh hidung',
+  'Membasuh muka',
+  'Membasuh kedua tangan',
+  'Membasuh rambut',
+  'Membasuh kedua telinga',
+  'Membasuh kedua kaki',
+];
+let urutanNext = 0;
+
+function initUrutan(){
+  urutanNext = 0;
+  const order = shuffle(URUTAN_STEPS.map((text,i)=>({text, correctIndex:i})));
+  const wrap = document.getElementById('urutan-list');
+  wrap.innerHTML='';
+  order.forEach(step=>{
+    const div = document.createElement('div');
+    div.className='step-card';
+    div.innerHTML = `<div class="num">?</div><div>${step.text}</div>`;
+    div.onclick=()=>{
+      if(div.classList.contains('done')) return;
+      if(step.correctIndex === urutanNext){
+        div.classList.add('done');
+        div.querySelector('.num').textContent = urutanNext+1;
+        chime(true); flashFeedback(true);
+        urutanNext++;
+        if(urutanNext === URUTAN_STEPS.length){
+          setTimeout(()=>finishGame('Kamu hafal urutan wudhu dengan benar!'), 500);
+        }
+      } else {
+        chime(false); flashFeedback(false);
+        div.classList.add('shake');
+        setTimeout(()=>div.classList.remove('shake'), 350);
+      }
+    };
+    wrap.appendChild(div);
+  });
+}
+
+/* ================= GAME 6: MEWARNAI BUNGA (Seni) ================= */
+let warnaSelected = null;
+let warnaFilled = 0;
+const WARNA_REGIONS = ['petal-top','petal-right','petal-bottom','petal-left','petal-center'];
+
+function initWarna(){
+  warnaSelected = null; warnaFilled = 0;
+  WARNA_REGIONS.forEach(id=> document.getElementById(id).setAttribute('fill', '#e9e4d8'));
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
+}
+function pickColor(cssVar, el){
+  warnaSelected = cssVar;
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function colorRegion(shapeEl){
+  if(!warnaSelected){ flashFeedback(false, 'Pilih warna dulu ya'); return; }
+  const wasGray = shapeEl.getAttribute('fill') === '#e9e4d8';
+  shapeEl.setAttribute('fill', getComputedStyle(document.documentElement).getPropertyValue(warnaSelected.replace('var(','').replace(')','')) || warnaSelected);
+  // fallback langsung pakai nilai var jika getPropertyValue gagal
+  shapeEl.style.fill = warnaSelected;
+  if(wasGray){
+    warnaFilled++;
+    chime(true);
+    if(warnaFilled === WARNA_REGIONS.length){
+      setTimeout(()=>finishGame('Bunganya jadi berwarna-warni, bagus sekali!'), 400);
+    }
+  }
+}
+
+/* ================= GAME 7: SORTIR UKURAN (Kognitif) ================= */
+const SORTIR_BANK = ['⚽','🌟','🍎','🐟','🎈','🍩','🐢','🎁'];
+let sortirRound = 0, sortirNext = 0, sortirOrder = [];
+const SORTIR_TOTAL_ROUND = 5;
+
+function initSortir(){
+  sortirRound = 0;
+  sortirOrder = shuffle(SORTIR_BANK).slice(0, SORTIR_TOTAL_ROUND);
+  nextSortirRound();
+}
+function nextSortirRound(){
+  if(sortirRound >= sortirOrder.length){ finishGame('Kamu jago mengurutkan ukuran benda!'); return; }
+  sortirNext = 0;
+  const emoji = sortirOrder[sortirRound];
+  const sizes = [28, 52, 78]; // kecil, sedang, besar (index = urutan yang benar)
+  const shuffledIdx = shuffle([0,1,2]);
+  const wrap = document.getElementById('sortir-opts');
+  wrap.innerHTML = '';
+  shuffledIdx.forEach(correctIndex=>{
+    const b = document.createElement('button');
+    b.className = 'opt-btn';
+    b.style.cssText = `font-size:${sizes[correctIndex]}px; width:auto; height:auto; padding:6px 16px; background:linear-gradient(180deg,#7bd0e0,var(--biru)); box-shadow:0 5px 0 var(--biru-d);`;
+    b.textContent = emoji;
+    b.onclick = ()=>{
+      if(b.disabled) return;
+      if(correctIndex === sortirNext){
+        chime(true); flashFeedback(true);
+        b.disabled = true; b.style.opacity = 0.3;
+        sortirNext++;
+        if(sortirNext === 3){ sortirRound++; setTimeout(nextSortirRound, 700); }
+      } else {
+        chime(false); flashFeedback(false);
+        b.classList.add('wrongshake');
+        setTimeout(()=>b.classList.remove('wrongshake'), 350);
+      }
+    };
+    wrap.appendChild(b);
+  });
+}
+
+/* ================= GAME 8: IKUTI GERAKAN (Fisik-Motorik) ================= */
+const GERAK_BANK = [
+  {emoji:'🤸', text:'Lompat-lompat di tempat!'},
+  {emoji:'👏', text:'Tepuk tangan tiga kali!'},
+  {emoji:'🔄', text:'Putar badan pelan-pelan!'},
+  {emoji:'🙆', text:'Angkat kedua tangan ke atas!'},
+  {emoji:'🐦', text:'Kepak-kepakkan tangan seperti burung!'},
+  {emoji:'🐸', text:'Melompat seperti katak!'},
+  {emoji:'🌳', text:'Berdiri diam seperti pohon tertiup angin!'},
+  {emoji:'🚶', text:'Jalan di tempat!'},
+];
+let gerakRound = 0, gerakOrder = [], gerakTimer = null;
+const GERAK_TOTAL_ROUND = 5;
+
+function initGerak(){
+  gerakRound = 0;
+  gerakOrder = shuffle(GERAK_BANK).slice(0, GERAK_TOTAL_ROUND);
+  nextGerakRound();
+}
+function nextGerakRound(){
+  clearInterval(gerakTimer);
+  if(gerakRound >= gerakOrder.length){ finishGame('Badanmu sudah bergerak semua, hebat!'); return; }
+  const item = gerakOrder[gerakRound];
+  document.getElementById('gerak-emoji').textContent = item.emoji;
+  document.getElementById('gerak-text').textContent = item.text;
+  speak(item.text);
+  let t = 4;
+  document.getElementById('gerak-count').textContent = t;
+  gerakTimer = setInterval(()=>{
+    t--;
+    document.getElementById('gerak-count').textContent = t>0 ? t : '👍';
+    if(t<=0){
+      clearInterval(gerakTimer);
+      chime(true);
+      gerakRound++;
+      setTimeout(nextGerakRound, 900);
+    }
+  }, 1000);
+}
+
+/* ================= GAME 9: SIKAP YANG BAIK / ROLEPLAY (Sosial-Emosional) ================= */
+const ROLEPLAY_BANK = [
+  {scenario:'Temanmu menangis karena mainannya rusak. Apa yang kamu lakukan?', opts:[
+    {t:'Menghibur dan menemaninya', ok:true}, {t:'Mentertawakannya', ok:false}, {t:'Pergi begitu saja', ok:false}]},
+  {scenario:'Kamu ingin pinjam pensil warna milik teman. Apa yang kamu lakukan?', opts:[
+    {t:'Meminta izin dulu', ok:true}, {t:'Mengambilnya diam-diam', ok:false}, {t:'Merebutnya', ok:false}]},
+  {scenario:'Kamu tidak sengaja menyenggol temanmu hingga jatuh. Apa yang kamu lakukan?', opts:[
+    {t:'Minta maaf dan membantunya berdiri', ok:true}, {t:'Berlari pergi', ok:false}, {t:'Menyalahkan temanmu', ok:false}]},
+  {scenario:'Antrean bermain ayunan sedang panjang. Apa yang kamu lakukan?', opts:[
+    {t:'Menunggu giliran dengan sabar', ok:true}, {t:'Menyerobot antrean', ok:false}, {t:'Merebut ayunan teman', ok:false}]},
+  {scenario:'Temanmu terlihat sedih duduk sendirian. Apa yang kamu lakukan?', opts:[
+    {t:'Menghampiri dan mengajaknya bermain', ok:true}, {t:'Membiarkannya saja', ok:false}, {t:'Mengejeknya', ok:false}]},
+  {scenario:'Kamu dan teman selesai bermain balok bersama. Apa yang kamu lakukan?', opts:[
+    {t:'Membereskan bersama-sama', ok:true}, {t:'Meninggalkannya berantakan', ok:false}, {t:'Menyuruh temanmu membereskan sendiri', ok:false}]},
+  {scenario:'Ibu guru sedang menjelaskan pelajaran di depan kelas. Apa yang kamu lakukan?', opts:[
+    {t:'Mendengarkan dengan tenang', ok:true}, {t:'Berbicara sendiri', ok:false}, {t:'Berlari-lari di kelas', ok:false}]},
+  {scenario:'Temanmu berhasil menyelesaikan tugasnya lebih dulu. Apa yang kamu lakukan?', opts:[
+    {t:'Memberi selamat kepadanya', ok:true}, {t:'Merasa iri dan marah', ok:false}, {t:'Mengejeknya', ok:false}]},
+];
+let roleplayRound = 0, roleplayOrder = [];
+const ROLEPLAY_TOTAL_ROUND = 5;
+
+function initRoleplay(){
+  roleplayRound = 0;
+  roleplayOrder = shuffle(ROLEPLAY_BANK).slice(0, ROLEPLAY_TOTAL_ROUND);
+  nextRoleplayRound();
+}
+function nextRoleplayRound(){
+  if(roleplayRound >= roleplayOrder.length){ finishGame('Kamu tahu cara bersikap baik kepada teman!'); return; }
+  const item = roleplayOrder[roleplayRound];
+  document.getElementById('roleplay-story').textContent = item.scenario;
+  const wrap = document.getElementById('roleplay-opts');
+  wrap.innerHTML = '';
+  shuffle(item.opts).forEach(o=>{
+    const b = document.createElement('button');
+    b.className = 'resp-btn'; b.textContent = o.t;
+    b.onclick = ()=>{
+      if(o.ok){
+        chime(true); flashFeedback(true);
+        roleplayRound++;
+        setTimeout(nextRoleplayRound, 700);
+      } else {
+        chime(false); flashFeedback(false);
+        b.classList.add('wrongshake');
+        setTimeout(()=>b.classList.remove('wrongshake'), 350);
+      }
+    };
+    wrap.appendChild(b);
+  });
+}
+
+/* ================= GAME 10: KISAH TELADAN NABI (Nilai Agama & Moral) ================= */
+const NABI_BANK = [
+  {story:'Nabi Nuh membangun kapal besar untuk menyelamatkan umatnya dari banjir.', q:'Apa yang dibangun Nabi Nuh?', opts:['Kapal','Mobil','Pesawat'], correct:'Kapal'},
+  {story:'Nabi Ibrahim selalu sabar menghadapi cobaan yang berat.', q:'Sifat apa yang dimiliki Nabi Ibrahim?', opts:['Sabar','Marah','Malas'], correct:'Sabar'},
+  {story:'Nabi Yusuf selalu berkata jujur meskipun sulit.', q:'Sifat apa yang dimiliki Nabi Yusuf?', opts:['Jujur','Bohong','Sombong'], correct:'Jujur'},
+  {story:'Nabi Muhammad SAW sangat menyayangi anak-anak yatim.', q:'Siapa yang disayangi Nabi Muhammad SAW?', opts:['Anak yatim','Musuh','Orang jahat'], correct:'Anak yatim'},
+  {story:'Nabi Sulaiman diberi kemampuan berbicara dengan hewan-hewan.', q:'Nabi Sulaiman bisa berbicara dengan apa?', opts:['Hewan','Batu','Awan'], correct:'Hewan'},
+  {story:'Nabi Musa berani melawan raja yang berbuat zalim.', q:'Sifat apa yang dimiliki Nabi Musa?', opts:['Berani','Penakut','Malas'], correct:'Berani'},
+  {story:'Nabi Ismail patuh dan taat kepada orang tuanya.', q:'Sifat apa yang dimiliki Nabi Ismail?', opts:['Patuh','Membangkang','Sombong'], correct:'Patuh'},
+];
+let nabiRound = 0, nabiOrder = [];
+const NABI_TOTAL_ROUND = 5;
+
+function initNabi(){
+  nabiRound = 0;
+  nabiOrder = shuffle(NABI_BANK).slice(0, NABI_TOTAL_ROUND);
+  nextNabiRound();
+}
+function nextNabiRound(){
+  if(nabiRound >= nabiOrder.length){ finishGame('Kamu belajar banyak teladan yang baik!'); return; }
+  const item = nabiOrder[nabiRound];
+  document.getElementById('nabi-story').textContent = item.story;
+  document.getElementById('nabi-question').textContent = item.q;
+  const wrap = document.getElementById('nabi-opts');
+  wrap.innerHTML = '';
+  shuffle(item.opts).forEach(optText=>{
+    const b = document.createElement('button');
+    b.className = 'resp-btn'; b.textContent = optText;
+    b.onclick = ()=>{
+      if(optText === item.correct){
+        chime(true); flashFeedback(true);
+        nabiRound++;
+        setTimeout(nextNabiRound, 700);
+      } else {
+        chime(false); flashFeedback(false);
+        b.classList.add('wrongshake');
+        setTimeout(()=>b.classList.remove('wrongshake'), 350);
+      }
+    };
+    wrap.appendChild(b);
+  });
+}
+
+/* ================= GAME 11: SUSUN BANGUNAN (Seni) - drag & drop bagian yang hilang ================= */
+/* ---- Pembangun ilustrasi SVG: dinding+pintu+jendela tetap ada, atap/kubah sengaja tidak digambar (jadi lubang) ---- */
+function bgRumah(wall, door, win){
+  return `<svg viewBox="0 0 230 230" width="100%" height="100%" style="position:absolute; inset:0;">
+    <rect x="60" y="120" width="110" height="80" rx="4" fill="${wall}"/>
+    <rect x="72" y="132" width="22" height="22" rx="3" fill="${win}" stroke="#fff" stroke-width="3"/>
+    <rect x="136" y="132" width="22" height="22" rx="3" fill="${win}" stroke="#fff" stroke-width="3"/>
+    <rect x="100" y="155" width="30" height="45" rx="4" fill="${door}"/>
+  </svg>`;
+}
+function bgMasjid(wall, door){
+  return `<svg viewBox="0 0 230 230" width="100%" height="100%" style="position:absolute; inset:0;">
+    <rect x="170" y="95" width="12" height="105" fill="${wall}"/>
+    <rect x="169" y="86" width="14" height="12" rx="2" fill="${wall}"/>
+    <rect x="55" y="130" width="120" height="70" rx="4" fill="${wall}"/>
+    <rect x="100" y="160" width="30" height="40" rx="14" fill="${door}"/>
+  </svg>`;
+}
+function bgMercusuar(towerColor, stripeColor){
+  return `<svg viewBox="0 0 230 230" width="100%" height="100%" style="position:absolute; inset:0;">
+    <rect x="85" y="195" width="60" height="16" rx="3" fill="${towerColor}"/>
+    <rect x="100" y="115" width="30" height="80" fill="${towerColor}"/>
+    <rect x="100" y="135" width="30" height="14" fill="${stripeColor}"/>
+    <rect x="100" y="165" width="30" height="14" fill="${stripeColor}"/>
+  </svg>`;
+}
+function bgKapal(hullColor, waterColor){
+  return `<svg viewBox="0 0 230 230" width="100%" height="100%" style="position:absolute; inset:0;">
+    <rect x="0" y="188" width="230" height="42" fill="${waterColor}"/>
+    <rect x="112" y="90" width="6" height="80" fill="#8a5a34"/>
+    <polygon points="55,168 175,168 155,198 75,198" fill="${hullColor}"/>
+  </svg>`;
+}
+/* ---- Potongan (chip) yang bisa diseret, ukurannya persis sama proporsi dengan lubangnya ---- */
+function chipSegitiga(w,h,color){
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="100%" style="display:block;"><polygon points="0,${h} ${w/2},0 ${w},${h}" fill="${color}"/></svg>`;
+}
+function chipAtapDatar(w,h,color){
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="100%" style="display:block;"><rect x="0" y="${h*0.3}" width="${w}" height="${h*0.7}" rx="6" fill="${color}"/></svg>`;
+}
+function chipKubah(w,h,color){
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="100%" style="display:block;"><path d="M0,${h} Q0,0 ${w/2},0 Q${w},0 ${w},${h} Z" fill="${color}"/></svg>`;
+}
+function chipKotak(w,h,color){
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="100%" style="display:block;"><rect x="0" y="0" width="${w}" height="${h}" rx="6" fill="${color}"/></svg>`;
+}
+
+const HOLE_ATAP = {top:55, left:40, width:150, height:65};
+const HOLE_KUBAH = {top:66, left:70, width:90, height:64};
+const HOLE_BEACON = {top:75, left:88, width:54, height:40};
+const HOLE_LAYAR = {top:95, left:120, width:52, height:70};
+
+const BANGUN_SCENES = [
+  { name:'Rumah', shapeName:'Segitiga',
+    background: bgRumah('#f4c98b','#8a5a34','#bfe3ee'),
+    hole: HOLE_ATAP, color:'#e6484f',
+    correctChip: chipSegitiga(HOLE_ATAP.width, HOLE_ATAP.height, '#e6484f'),
+    wrongChips: [ chipSegitiga(HOLE_ATAP.width, HOLE_ATAP.height, '#57b8d6'), chipAtapDatar(HOLE_ATAP.width, HOLE_ATAP.height, '#e6484f') ] },
+  { name:'Masjid', shapeName:'Kubah',
+    background: bgMasjid('#eaf3e2','#4a9950'),
+    hole: HOLE_KUBAH, color:'#e0b400',
+    correctChip: chipKubah(HOLE_KUBAH.width, HOLE_KUBAH.height, '#e0b400'),
+    wrongChips: [ chipKubah(HOLE_KUBAH.width, HOLE_KUBAH.height, '#57b8d6'), chipSegitiga(HOLE_KUBAH.width, HOLE_KUBAH.height, '#e0b400') ] },
+  { name:'Mercusuar', shapeName:'Segitiga',
+    background: bgMercusuar('#e6484f','#fff'),
+    hole: HOLE_BEACON, color:'#ffd93d',
+    correctChip: chipSegitiga(HOLE_BEACON.width, HOLE_BEACON.height, '#ffd93d'),
+    wrongChips: [ chipSegitiga(HOLE_BEACON.width, HOLE_BEACON.height, '#57b8d6'), chipKubah(HOLE_BEACON.width, HOLE_BEACON.height, '#ffd93d') ] },
+  { name:'Kapal Layar', shapeName:'Segitiga',
+    background: bgKapal('#8a5a34','#57b8d6'),
+    hole: HOLE_LAYAR, color:'#f4ead0',
+    correctChip: chipSegitiga(HOLE_LAYAR.width, HOLE_LAYAR.height, '#f4ead0'),
+    wrongChips: [ chipSegitiga(HOLE_LAYAR.width, HOLE_LAYAR.height, '#f4a340'), chipKotak(HOLE_LAYAR.width, HOLE_LAYAR.height, '#f4ead0') ] },
+];
+
+let bangunRound = 0, bangunOrder = [];
+const BANGUN_TOTAL_ROUND = 4;
+
+function initBangun(){
+  bangunRound = 0;
+  bangunOrder = shuffle(BANGUN_SCENES).slice(0, BANGUN_TOTAL_ROUND);
+  nextBangunRound();
+}
+function nextBangunRound(){
+  if(bangunRound >= bangunOrder.length){ finishGame('Kamu berhasil melengkapi semua gambarnya!'); return; }
+  const item = bangunOrder[bangunRound];
+  document.getElementById('bangun-name').textContent = 'Lengkapi gambar: ' + item.name;
+  document.getElementById('bangun-hint-shape').textContent = item.shapeName;
+  document.getElementById('bangun-hint-swatch').style.background = item.color;
+
+  const scene = document.getElementById('bangun-scene');
+  scene.innerHTML = item.background;
+
+  const hole = document.createElement('div');
+  hole.id = 'bangun-hole';
+  hole.style.cssText = `position:absolute; top:${item.hole.top}px; left:${item.hole.left}px;
+    width:${item.hole.width}px; height:${item.hole.height}px; border:3px dashed #a89a72; border-radius:8px; overflow:hidden;`;
+  scene.appendChild(hole);
+
+  const choices = shuffle([
+    {svg:item.correctChip, ok:true},
+    {svg:item.wrongChips[0], ok:false},
+    {svg:item.wrongChips[1], ok:false},
+  ]);
+
+  const tray = document.getElementById('bangun-tray');
+  tray.innerHTML = '';
+  const chipW = Math.min(item.hole.width, 100);
+  const chipH = chipW * (item.hole.height / item.hole.width);
+  choices.forEach(ch=>{
+    const chip = document.createElement('div');
+    chip.className = 'bangun-chip';
+    chip.style.width = chipW + 'px';
+    chip.style.height = chipH + 'px';
+    chip.style.padding = '0';
+    chip.innerHTML = ch.svg;
+    tray.appendChild(chip);
+    makeBangunDraggable(chip, ch.ok, item);
+  });
+}
+
+function makeBangunDraggable(chip, isCorrect, item){
+  let dragging = false, startX = 0, startY = 0, placed = false;
+
+  chip.addEventListener('pointerdown', (e)=>{
+    if(placed) return;
+    dragging = true;
+    chip.setPointerCapture(e.pointerId);
+    const r = chip.getBoundingClientRect();
+    startX = e.clientX - r.left;
+    startY = e.clientY - r.top;
+    chip.style.position = 'fixed';
+    chip.style.left = r.left + 'px';
+    chip.style.top = r.top + 'px';
+    chip.style.zIndex = 999;
+    document.body.appendChild(chip);
+  });
+
+  chip.addEventListener('pointermove', (e)=>{
+    if(!dragging) return;
+    chip.style.left = (e.clientX - startX) + 'px';
+    chip.style.top = (e.clientY - startY) + 'px';
+    const hole = document.getElementById('bangun-hole');
+    if(hole){
+      const hr = hole.getBoundingClientRect();
+      const over = e.clientX>hr.left && e.clientX<hr.right && e.clientY>hr.top && e.clientY<hr.bottom;
+      hole.style.borderColor = over ? 'var(--hijau)' : '#a89a72';
+    }
+  });
+
+  chip.addEventListener('pointerup', (e)=>{
+    if(!dragging) return;
+    dragging = false;
+    const hole = document.getElementById('bangun-hole');
+    let dropped = false;
+    if(hole){
+      const hr = hole.getBoundingClientRect();
+      dropped = e.clientX>hr.left && e.clientX<hr.right && e.clientY>hr.top && e.clientY<hr.bottom;
+      hole.style.borderColor = '#a89a72';
+    }
+
+    if(dropped && isCorrect){
+      placed = true;
+      chime(true); flashFeedback(true);
+      chip.remove();
+      if(hole){
+        hole.style.border = 'none';
+        hole.innerHTML = item.correctChip; // pas persis karena proporsinya sama dengan lubang
+      }
+      bangunRound++;
+      setTimeout(nextBangunRound, 900);
+    } else if(dropped && !isCorrect){
+      chime(false); flashFeedback(false);
+      chip.classList.add('wrongshake');
+      setTimeout(()=>chip.classList.remove('wrongshake'), 350);
+      returnChipToTray(chip);
+    } else {
+      returnChipToTray(chip);
+    }
+  });
+}
+
+function returnChipToTray(chip){
+  chip.style.position = '';
+  chip.style.left = '';
+  chip.style.top = '';
+  chip.style.zIndex = '';
+  document.getElementById('bangun-tray').appendChild(chip);
+}
+</script>
+</body>
+</html>
